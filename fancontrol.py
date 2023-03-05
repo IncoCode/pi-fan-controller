@@ -2,9 +2,10 @@
 
 import time
 import lgpio
+#from gpiozero import OutputDevice
 
 
-ON_THRESHOLD = 65  # (degrees Celsius) Fan kicks on at this temperature.
+ON_THRESHOLD = 75  # (degrees Celsius) Fan kicks on at this temperature.
 OFF_THRESHOLD = 55  # (degress Celsius) Fan shuts off at this temperature.
 SLEEP_INTERVAL = 5  # (seconds) How often we check the core temperature.
 GPIO_PIN = 18  # Which GPIO pin you're using to control the fan.
@@ -33,21 +34,27 @@ if __name__ == '__main__':
 
     h = lgpio.gpiochip_open(0)
     lgpio.gpio_claim_output(h, GPIO_PIN)
-
-    value = lgpio.gpio_read(h, GPIO_PIN)
+    is_enabled = False
 
     while True:
         temp = get_temp()
+        print(temp)
 
         # Start the fan if the temperature has reached the limit and the fan
         # isn't already running.
         # NOTE: `fan.value` returns 1 for "on" and 0 for "off"
-        if temp > ON_THRESHOLD and not value:
+        if temp > ON_THRESHOLD and not is_enabled:
+            #fan.on()
             lgpio.gpio_write(h, GPIO_PIN, 1)
+            is_enabled = True
+            print("On")
 
         # Stop the fan if the fan is running and the temperature has dropped
         # to 10 degrees below the limit.
-        elif value and temp < OFF_THRESHOLD:
+        elif is_enabled and temp < OFF_THRESHOLD:
+            #fan.off()
             lgpio.gpio_write(h, GPIO_PIN, 0)
+            is_enabled = False
+            print("Off")
 
         time.sleep(SLEEP_INTERVAL)
